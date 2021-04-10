@@ -10,6 +10,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import norm
+from scipy.optimize import curve_fit
 
 # import our Random class from Random.py file
 sys.path.append(".")
@@ -152,9 +153,9 @@ if __name__ == "__main__":
     sigma_1_up = np.abs(upper_p3 - p_approx)
     sigma_1_low = np.abs(p_approx - lower_p3)    
     
-    print('p_best:',p_approx)
-    print('Lower uncertainty estimate:','%0.4f'%(np.mean(sigma_1_low)))
-    print('Upper uncertainty estimate:','%0.4f'%(np.mean(sigma_1_up)))
+    print('p_best:','%0.3f'%p_approx)
+    print('Lower uncertainty estimate (data):','%0.4f'%(np.mean(sigma_1_low)))
+    print('Upper uncertainty estimate (data):','%0.4f'%(np.mean(sigma_1_up)))
     
     #the following prints p_true for comparison, but only if user inputs initial p_true used to generate data with the first program. 
     try:
@@ -163,12 +164,27 @@ if __name__ == "__main__":
         print('no p_true given')
     
     
+    def func(p,unc):
+        return -(p - p_approx)**2 /(2*unc**2)
+    
+
+    
     plt.figure()
     plt.scatter(p3,LLR,s=2)
     plt.axhline(-0.5,color='steelblue',linestyle='--',alpha=0.5,label='-1/2 line')
     #plt.axvline(p_approx,color='r',linestyle='--',alpha=0.5)
     plt.ylabel('LLR',fontsize=16)
     plt.xlabel('p3',fontsize=16)
+    
+    p3_sort = np.sort(p3)
+    LLR_sort = np.sort(LLR)
+
+    popt,pcov = curve_fit(func,p3,LLR)
+    plt.plot(p3_sort,func(p3_sort,*popt),'r-',label='fit')
+    if popt[0] > 0:
+        print('Uncertainty from curve_fit:','%0.3f'%(popt[0]))
+    else:
+        print('Uncertainty from curve_fit:','%0.3f'%(-1*popt[0]))
     plt.legend()
     plt.show()    
     
